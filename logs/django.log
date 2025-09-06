@@ -4932,3 +4932,14 @@ Traceback (most recent call last):
 django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 270: 'endwith', expected 'endif'. Did you forget to register or load this tag?
 ERROR 2025-09-06 20:56:44,098 basehttp 51600 45120 "GET /admin/events/307/attendance/ HTTP/1.1" 500 204402
 INFO 2025-09-06 20:58:19,336 autoreload 51468 53756 Watching for file changes with StatReloader
+INFO 2025-09-06 20:58:24,605 basehttp 51600 45120 "GET /admin/events/307/attendance/ HTTP/1.1" 200 11351
+INFO 2025-09-06 20:58:24,653 basehttp 51600 45120 "GET /static/css/admin.css HTTP/1.1" 304 0
+INFO 2025-09-06 20:58:29,236 basehttp 51600 45120 "GET /admin/events/308/attendance/ HTTP/1.1" 200 10040
+INFO 2025-09-06 20:58:31,537 basehttp 51600 45120 "GET /admin/dashboard/ HTTP/1.1" 200 21554
+INFO 2025-09-06 20:58:31,594 basehttp 51600 53612 "GET /admin/colleges/ HTTP/1.1" 200 288
+INFO 2025-09-06 20:58:31,609 basehttp 51600 45120 "GET /api/dashboard/summary/ HTTP/1.1" 200 1188
+INFO 2025-09-06 20:58:31,664 basehttp 51600 53612 "GET /api/events/popularity/?limit=10 HTTP/1.1" 200 1028
+INFO 2025-09-06 20:58:31,697 basehttp 51600 45120 "GET /api/events/?ordering=-start_date&limit=10 HTTP/1.1" 200 1945
+INFO 2025-09-06 20:58:33,298 basehttp 51600 45120 "GET /admin/events/309/attendance/ HTTP/1.1" 200 8693
+INFO 2025-09-06 20:58:40,111 basehttp 51600 45120 "POST /admin/events/307/attendance/mark/ HTTP/1.1" 200 111
+INFO 2025-09-06 20:58:43,372 basehttp 51600 53576 "POST /admin/events/307/attendance/mark/ HTTP/1.1" 200 112
