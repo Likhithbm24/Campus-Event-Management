@@ -9,7 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from events.models import Event, College, Student, EventRegistration, Attendance
+from events.models import Event, College, Student, EventRegistration, Attendance, Feedback
+from django.db.models import Avg, Count
 import json
 
 
@@ -333,3 +334,133 @@ def update_event(request, event_id):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Error updating event: {str(e)}'}, status=500)
+
+
+@login_required
+def feedback_analytics(request):
+    """View for feedback analytics dashboard."""
+    return render(request, 'admin/feedback_analytics.html')
+
+
+@login_required
+def get_feedback_analytics(request):
+    """API endpoint to get feedback analytics data."""
+    try:
+        # Get all events with feedback
+        events_with_feedback = Event.objects.filter(feedback__isnull=False).distinct()
+        
+        # Calculate overall statistics
+        total_feedback = Feedback.objects.count()
+        avg_rating = Feedback.objects.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
+        
+        # Get rating distribution
+        rating_distribution = Feedback.objects.values('rating').annotate(
+            count=Count('id')
+        ).order_by('rating')
+        
+        # Get feedback by event type
+        feedback_by_type = events_with_feedback.values('event_type').annotate(
+            total_feedback=Count('feedback'),
+            avg_rating=Avg('feedback__rating')
+        ).order_by('-total_feedback')
+        
+        # Get feedback by college
+        feedback_by_college = events_with_feedback.values('college__name', 'college__code').annotate(
+            total_feedback=Count('feedback'),
+            avg_rating=Avg('feedback__rating')
+        ).order_by('-total_feedback')
+        
+        # Get top rated events
+        top_rated_events = events_with_feedback.annotate(
+            avg_rating=Avg('feedback__rating'),
+            feedback_count=Count('feedback')
+        ).filter(feedback_count__gte=3).order_by('-avg_rating')[:10]
+        
+        # Get recent feedback
+        recent_feedback = Feedback.objects.select_related('event', 'student').order_by('-submitted_at')[:10]
+        
+        # Format top rated events
+        top_events_data = []
+        for event in top_rated_events:
+            top_events_data.append({
+                'id': event.id,
+                'title': event.title,
+                'event_code': event.event_code,
+                'college': event.college.name,
+                'event_type': event.event_type,
+                'avg_rating': round(event.avg_rating, 2),
+                'feedback_count': event.feedback_count
+            })
+        
+        # Format recent feedback
+        recent_feedback_data = []
+        for feedback in recent_feedback:
+            recent_feedback_data.append({
+                'id': feedback.id,
+                'event_title': feedback.event.title,
+                'student_name': feedback.student.full_name,
+                'rating': feedback.rating,
+                'comments': feedback.comments[:100] + '...' if len(feedback.comments) > 100 else feedback.comments,
+                'submitted_at': feedback.submitted_at.strftime('%Y-%m-%d %H:%M')
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'analytics': {
+                'total_feedback': total_feedback,
+                'avg_rating': round(avg_rating, 2),
+                'rating_distribution': list(rating_distribution),
+                'feedback_by_type': list(feedback_by_type),
+                'feedback_by_college': list(feedback_by_college),
+                'top_rated_events': top_events_data,
+                'recent_feedback': recent_feedback_data
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error getting feedback analytics: {str(e)}'}, status=500)
+
+
+@login_required
+def event_feedback_details(request, event_id):
+    """View for detailed feedback of a specific event."""
+    try:
+        event = Event.objects.get(id=event_id)
+        feedback_records = Feedback.objects.filter(event=event).select_related('student').order_by('-submitted_at')
+        
+        # Calculate event-specific statistics
+        total_feedback = feedback_records.count()
+        avg_rating = feedback_records.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
+        
+        # Get rating distribution for this event
+        rating_distribution = feedback_records.values('rating').annotate(
+            count=Count('id')
+        ).order_by('rating')
+        
+        # Format feedback records
+        feedback_data = []
+        for feedback in feedback_records:
+            feedback_data.append({
+                'id': feedback.id,
+                'student_name': feedback.student.full_name,
+                'student_id': feedback.student.student_id,
+                'college': feedback.student.college.name,
+                'rating': feedback.rating,
+                'comments': feedback.comments,
+                'submitted_at': feedback.submitted_at.strftime('%Y-%m-%d %H:%M')
+            })
+        
+        context = {
+            'event': event,
+            'feedback_records': feedback_data,
+            'total_feedback': total_feedback,
+            'avg_rating': round(avg_rating, 2),
+            'rating_distribution': list(rating_distribution)
+        }
+        
+        return render(request, 'admin/event_feedback_details.html', context)
+        
+    except Event.DoesNotExist:
+        return JsonResponse({'error': 'Event not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'Error getting event feedback: {str(e)}'}, status=500)

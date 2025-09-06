@@ -4943,3 +4943,58 @@ INFO 2025-09-06 20:58:31,697 basehttp 51600 45120 "GET /api/events/?ordering=-st
 INFO 2025-09-06 20:58:33,298 basehttp 51600 45120 "GET /admin/events/309/attendance/ HTTP/1.1" 200 8693
 INFO 2025-09-06 20:58:40,111 basehttp 51600 45120 "POST /admin/events/307/attendance/mark/ HTTP/1.1" 200 111
 INFO 2025-09-06 20:58:43,372 basehttp 51600 53576 "POST /admin/events/307/attendance/mark/ HTTP/1.1" 200 112
+INFO 2025-09-06 21:16:32,243 basehttp 51600 59512 "GET /admin/logout/ HTTP/1.1" 200 3576
+INFO 2025-09-06 21:16:33,764 basehttp 51600 59512 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-09-06 21:16:33,893 basehttp 51600 59512 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4181
+INFO 2025-09-06 21:16:33,926 basehttp 51600 59512 "GET /static/admin/css/login.css HTTP/1.1" 304 0
+INFO 2025-09-06 21:16:34,686 basehttp 51600 59512 "GET /admin/logout/ HTTP/1.1" 302 0
+INFO 2025-09-06 21:16:34,690 basehttp 51600 59512 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-09-06 21:16:34,693 basehttp 51600 59512 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4181
+INFO 2025-09-06 21:16:35,053 basehttp 51600 59512 "GET /admin/dashboard/ HTTP/1.1" 302 0
+INFO 2025-09-06 21:16:35,067 basehttp 51600 59512 "GET /accounts/login/?next=/admin/dashboard/ HTTP/1.1" 200 3041
+INFO 2025-09-06 21:16:36,137 basehttp 51600 59512 "GET /accounts/login/?next=/admin/dashboard/ HTTP/1.1" 200 3041
+INFO 2025-09-06 21:16:38,998 basehttp 51600 59512 "GET /student/login/ HTTP/1.1" 200 3762
+INFO 2025-09-06 21:16:39,023 basehttp 51600 59512 "GET /static/css/student.css HTTP/1.1" 304 0
+INFO 2025-09-06 21:16:46,355 basehttp 51600 59512 "POST /student/login/process/ HTTP/1.1" 200 173
+INFO 2025-09-06 21:16:46,373 basehttp 51600 59512 "GET /student/dashboard/ HTTP/1.1" 200 21369
+WARNING 2025-09-06 21:16:46,413 log 51600 59512 Forbidden: /api/colleges/
+WARNING 2025-09-06 21:16:46,414 basehttp 51600 59512 "GET /api/colleges/ HTTP/1.1" 403 58
+WARNING 2025-09-06 21:16:46,423 log 51600 59512 Forbidden: /api/students/1054/events/
+WARNING 2025-09-06 21:16:46,423 basehttp 51600 59512 "GET /api/students/1054/events/ HTTP/1.1" 403 58
+INFO 2025-09-06 21:16:46,450 basehttp 51600 59512 "GET /api/events/?status=active&ordering=-start_date HTTP/1.1" 200 1945
+INFO 2025-09-06 21:25:19,026 autoreload 52864 52756 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:19,079 autoreload 46304 40824 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:19,104 autoreload 45488 12752 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:19,119 autoreload 51468 53756 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:19,140 autoreload 5280 9236 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:19,152 autoreload 51600 29860 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:22,419 autoreload 53392 57732 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:22,461 autoreload 42308 58800 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:22,513 autoreload 58188 59352 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:22,558 autoreload 58264 62248 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:22,623 autoreload 56096 45000 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:22,643 autoreload 47680 53200 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:43,785 autoreload 56096 45000 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:43,819 autoreload 47680 53200 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:43,840 autoreload 53392 57732 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:43,846 autoreload 58264 62248 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:43,909 autoreload 58188 59352 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:43,954 autoreload 42308 58800 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\views.py changed, reloading.
+INFO 2025-09-06 21:25:45,055 autoreload 43668 58036 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:45,060 autoreload 46440 57032 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:45,092 autoreload 63144 58708 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:45,103 autoreload 62212 57784 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:45,152 autoreload 54496 57084 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:45,213 autoreload 9072 62040 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:54,405 autoreload 43668 58036 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\urls.py changed, reloading.
+INFO 2025-09-06 21:25:54,656 autoreload 9072 62040 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\urls.py changed, reloading.
+INFO 2025-09-06 21:25:54,673 autoreload 54496 57084 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\urls.py changed, reloading.
+INFO 2025-09-06 21:25:54,692 autoreload 62212 57784 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\urls.py changed, reloading.
+INFO 2025-09-06 21:25:54,708 autoreload 46440 57032 C:\Users\HP\OneDrive\Desktop\campuseventmagement\campus_events\urls.py changed, reloading.
+INFO 2025-09-06 21:25:56,194 autoreload 58608 3040 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:56,809 autoreload 39060 51664 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:56,842 autoreload 5280 48928 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:56,867 autoreload 53484 57976 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:56,869 autoreload 57628 62460 Watching for file changes with StatReloader
+INFO 2025-09-06 21:25:56,875 autoreload 59316 56876 Watching for file changes with StatReloader
+INFO 2025-09-06 21:28:55,129 autoreload 67068 67064 Watching for file changes with StatReloader

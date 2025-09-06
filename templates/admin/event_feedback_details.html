@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Feedback Details - {{ event.title }}</title>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <style>
+        .feedback-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .event-header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .event-header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .event-detail {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .event-detail strong {
+            color: #495057;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .rating-distribution {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .rating-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-label {
+            width: 60px;
+            font-weight: 500;
+        }
+
+        .rating-progress {
+            flex: 1;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 1rem;
+        }
+
+        .rating-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc3545, #ffc107, #28a745);
+            transition: width 0.3s ease;
+        }
+
+        .rating-count {
+            width: 40px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .feedback-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .feedback-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .feedback-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .feedback-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .feedback-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .stars {
+            color: #ffc107;
+        }
+
+        .feedback-comments {
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .no-feedback {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .no-feedback h3 {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Event Feedback Details</h1>
+        <div class="user-info">
+            <span>Welcome, Admin</span>
+            <a href="/admin/dashboard/" class="btn btn-outline">Back to Dashboard</a>
+            <a href="/admin/feedback-analytics/" class="btn btn-outline">Feedback Analytics</a>
+            <a href="/accounts/logout/" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="feedback-container">
+        <!-- Event Information -->
+        <div class="event-header">
+            <h1>{{ event.title }}</h1>
+            <div class="event-details">
+                <div class="event-detail">
+                    <strong>Event Code:</strong> {{ event.event_code }}
+                </div>
+                <div class="event-detail">
+                    <strong>College:</strong> {{ event.college.name }}
+                </div>
+                <div class="event-detail">
+                    <strong>Type:</strong> {{ event.event_type }}
+                </div>
+                <div class="event-detail">
+                    <strong>Date:</strong> {{ event.start_date|date:"M d, Y" }}
+                </div>
+                <div class="event-detail">
+                    <strong>Time:</strong> {{ event.start_date|time:"H:i" }} - {{ event.end_date|time:"H:i" }}
+                </div>
+                <div class="event-detail">
+                    <strong>Location:</strong> {{ event.location }}
+                </div>
+            </div>
+        </div>
+
+        {% if feedback_records %}
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_feedback }}</div>
+                <div class="stat-label">Total Feedback</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ avg_rating }}</div>
+                <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ rating_distribution|length }}</div>
+                <div class="stat-label">Rating Levels</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% for dist in rating_distribution %}
+                        {% if dist.rating >= 4 %}{{ dist.count }}{% endif %}
+                    {% endfor %}
+                </div>
+                <div class="stat-label">High Ratings (4+)</div>
+            </div>
+        </div>
+
+        <!-- Rating Distribution -->
+        <div class="rating-distribution">
+            <h3>Rating Distribution</h3>
+            {% for dist in rating_distribution %}
+            <div class="rating-bar">
+                <div class="rating-label">{{ dist.rating }} Star{{ dist.rating|pluralize }}</div>
+                <div class="rating-progress">
+                    <div class="rating-fill" style="width: {% widthratio dist.count total_feedback 100 %}%"></div>
+                </div>
+                <div class="rating-count">{{ dist.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Feedback Table -->
+        <div class="feedback-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Student ID</th>
+                        <th>College</th>
+                        <th>Rating</th>
+                        <th>Comments</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in feedback_records %}
+                    <tr>
+                        <td>{{ feedback.student_name }}</td>
+                        <td>{{ feedback.student_id }}</td>
+                        <td>{{ feedback.college }}</td>
+                        <td>
+                            <span class="stars">{{ "★"|repeat:feedback.rating }}{{ "☆"|repeat:5|sub:feedback.rating }}</span>
+                            <span>({{ feedback.rating }})</span>
+                        </td>
+                        <td class="feedback-comments">{{ feedback.comments|default:"No comments" }}</td>
+                        <td>{{ feedback.submitted_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- No Feedback Message -->
+        <div class="no-feedback">
+            <h3>No Feedback Available</h3>
+            <p>This event doesn't have any feedback yet. Students can submit feedback after attending the event.</p>
+            <a href="/admin/dashboard/" class="btn btn-primary">Back to Dashboard</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Add some interactivity if needed
+        document.addEventListener('DOMContentLoaded', function() {
+            // Any additional JavaScript can go here
+        });
+    </script>
+</body>
+</html>

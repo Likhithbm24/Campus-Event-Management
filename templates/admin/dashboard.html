@@ -134,6 +134,9 @@
           <a href="#" class="btn btn-primary" onclick="showCollegeManagement()"
             >Manage Colleges</a
           >
+          <a href="/admin/feedback-analytics/" class="btn btn-info"
+            >Feedback Analytics</a
+          >
         </div>
       </div>
     </div>
@@ -374,6 +377,9 @@
                             <button class="btn btn-info btn-sm" onclick="markAttendance(${
                               event.id
                             })">Attendance</button>
+                            <button class="btn btn-secondary btn-sm" onclick="viewFeedback(${
+                              event.id
+                            })">Feedback</button>
                             <button class="btn btn-success btn-sm" onclick="endEvent(${
                               event.id
                             })" ${
@@ -506,6 +512,11 @@
       // Edit event
       function editEvent(eventId) {
         window.open(`/admin/events/${eventId}/edit/`, "_blank");
+      }
+
+      // View feedback for an event
+      function viewFeedback(eventId) {
+        window.open(`/admin/events/${eventId}/feedback/`, "_blank");
       }
 
       // End event (mark as completed)

@@ -1,0 +1,404 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Analytics - Campus Event Management</title>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <style>
+        .analytics-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .analytics-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .analytics-header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .analytics-card-header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .analytics-card-content {
+            padding: 1.5rem;
+        }
+
+        .rating-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-label {
+            width: 60px;
+            font-weight: 500;
+        }
+
+        .rating-progress {
+            flex: 1;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 1rem;
+        }
+
+        .rating-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc3545, #ffc107, #28a745);
+            transition: width 0.3s ease;
+        }
+
+        .rating-count {
+            width: 40px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .feedback-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .feedback-item:last-child {
+            border-bottom: none;
+        }
+
+        .feedback-info {
+            flex: 1;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .feedback-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .feedback-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stars {
+            color: #ffc107;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .feedback-comments {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .comment-item {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .comment-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Feedback Analytics</h1>
+        <div class="user-info">
+            <span>Welcome, Admin</span>
+            <a href="/admin/dashboard/" class="btn btn-outline">Back to Dashboard</a>
+            <a href="/accounts/logout/" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="analytics-container">
+        <div class="analytics-header">
+            <h1>Feedback Analytics Dashboard</h1>
+            <p>Comprehensive analysis of student feedback across all events</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <p>Loading feedback analytics...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error" style="display: none;">
+            <p>Error loading feedback analytics. Please try again.</p>
+        </div>
+
+        <!-- Analytics Content -->
+        <div id="analytics-content" style="display: none;">
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-feedback">0</div>
+                    <div class="stat-label">Total Feedback</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avg-rating">0.0</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="events-with-feedback">0</div>
+                    <div class="stat-label">Events with Feedback</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="satisfaction-rate">0%</div>
+                    <div class="stat-label">Satisfaction Rate (4+ stars)</div>
+                </div>
+            </div>
+
+            <!-- Analytics Grid -->
+            <div class="analytics-grid">
+                <!-- Rating Distribution -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">Rating Distribution</div>
+                    <div class="analytics-card-content">
+                        <div id="rating-distribution">
+                            <!-- Rating bars will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback by Event Type -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">Feedback by Event Type</div>
+                    <div class="analytics-card-content">
+                        <div id="feedback-by-type">
+                            <!-- Event type data will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Rated Events -->
+                <div class="analytics-card full-width">
+                    <div class="analytics-card-header">Top Rated Events</div>
+                    <div class="analytics-card-content">
+                        <div id="top-rated-events">
+                            <!-- Top events will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Feedback -->
+                <div class="analytics-card full-width">
+                    <div class="analytics-card-header">Recent Feedback</div>
+                    <div class="analytics-card-content">
+                        <div class="feedback-comments" id="recent-feedback">
+                            <!-- Recent feedback will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadFeedbackAnalytics() {
+            try {
+                const response = await fetch('/admin/api/feedback-analytics/');
+                const data = await response.json();
+
+                if (data.success) {
+                    displayAnalytics(data.analytics);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('analytics-content').style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Failed to load analytics');
+                }
+            } catch (error) {
+                console.error('Error loading feedback analytics:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        function displayAnalytics(analytics) {
+            // Update statistics
+            document.getElementById('total-feedback').textContent = analytics.total_feedback;
+            document.getElementById('avg-rating').textContent = analytics.avg_rating;
+            document.getElementById('events-with-feedback').textContent = analytics.feedback_by_type.length;
+            
+            // Calculate satisfaction rate (4+ stars)
+            const totalFeedback = analytics.total_feedback;
+            const highRatingFeedback = analytics.rating_distribution
+                .filter(r => r.rating >= 4)
+                .reduce((sum, r) => sum + r.count, 0);
+            const satisfactionRate = totalFeedback > 0 ? Math.round((highRatingFeedback / totalFeedback) * 100) : 0;
+            document.getElementById('satisfaction-rate').textContent = satisfactionRate + '%';
+
+            // Display rating distribution
+            displayRatingDistribution(analytics.rating_distribution);
+
+            // Display feedback by event type
+            displayFeedbackByType(analytics.feedback_by_type);
+
+            // Display top rated events
+            displayTopRatedEvents(analytics.top_rated_events);
+
+            // Display recent feedback
+            displayRecentFeedback(analytics.recent_feedback);
+        }
+
+        function displayRatingDistribution(ratingDistribution) {
+            const container = document.getElementById('rating-distribution');
+            const maxCount = Math.max(...ratingDistribution.map(r => r.count));
+
+            container.innerHTML = ratingDistribution.map(rating => {
+                const percentage = maxCount > 0 ? (rating.count / maxCount) * 100 : 0;
+                const stars = '★'.repeat(rating.rating) + '☆'.repeat(5 - rating.rating);
+                
+                return `
+                    <div class="rating-bar">
+                        <div class="rating-label">${stars}</div>
+                        <div class="rating-progress">
+                            <div class="rating-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="rating-count">${rating.count}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayFeedbackByType(feedbackByType) {
+            const container = document.getElementById('feedback-by-type');
+            
+            container.innerHTML = feedbackByType.map(type => `
+                <div class="feedback-item">
+                    <div class="feedback-info">
+                        <div class="feedback-title">${type.event_type}</div>
+                        <div class="feedback-meta">${type.total_feedback} feedback</div>
+                    </div>
+                    <div class="feedback-rating">
+                        <span class="stars">${'★'.repeat(Math.round(type.avg_rating))}</span>
+                        <span>${type.avg_rating.toFixed(1)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayTopRatedEvents(topEvents) {
+            const container = document.getElementById('top-rated-events');
+            
+            container.innerHTML = topEvents.map(event => `
+                <div class="feedback-item">
+                    <div class="feedback-info">
+                        <div class="feedback-title">${event.title}</div>
+                        <div class="feedback-meta">${event.college} • ${event.event_type} • ${event.feedback_count} reviews</div>
+                    </div>
+                    <div class="feedback-rating">
+                        <span class="stars">${'★'.repeat(Math.round(event.avg_rating))}</span>
+                        <span>${event.avg_rating}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayRecentFeedback(recentFeedback) {
+            const container = document.getElementById('recent-feedback');
+            
+            container.innerHTML = recentFeedback.map(feedback => `
+                <div class="comment-item">
+                    <div class="comment-meta">
+                        ${feedback.student_name} • ${feedback.event_title} • ${feedback.submitted_at}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>${feedback.comments}</div>
+                        <div class="feedback-rating">
+                            <span class="stars">${'★'.repeat(feedback.rating)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load analytics on page load
+        document.addEventListener('DOMContentLoaded', loadFeedbackAnalytics);
+    </script>
+</body>
+</html>
