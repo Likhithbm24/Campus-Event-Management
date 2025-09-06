@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Event - {{ event.title }}</title>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    {% csrf_token %}
+    <style>
+        .edit-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .edit-header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .edit-header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .edit-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-completed {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Edit Event - {{ event.title }}</h1>
+        <div class="user-info">
+            <span>Welcome, Admin</span>
+            <button onclick="window.close()" class="logout-btn">Close</button>
+        </div>
+    </nav>
+
+    <div class="edit-container">
+        <!-- Event Information Header -->
+        <div class="edit-header">
+            <h1>{{ event.title }}</h1>
+            <p><strong>Event Code:</strong> {{ event.event_code }}</p>
+            <p><strong>Current Status:</strong> <span class="status-badge status-{{ event.status }}">{{ event.status }}</span></p>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="edit-form">
+            <div id="alert-container"></div>
+            
+            <form id="edit-event-form">
+                <div class="form-group">
+                    <label for="title">Event Title *</label>
+                    <input type="text" id="title" name="title" value="{{ event.title }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description">{{ event.description }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="college_id">College *</label>
+                        <select id="college_id" name="college_id" required>
+                            {% for college in colleges %}
+                                <option value="{{ college.id }}" {% if college.id == event.college.id %}selected{% endif %}>
+                                    {{ college.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <input type="text" id="location" name="location" value="{{ event.location }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="start_date">Event Start Date & Time *</label>
+                        <input type="datetime-local" id="start_date" name="start_date" 
+                               value="{{ event.start_date|date:'Y-m-d\TH:i' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="end_date">Event End Date & Time *</label>
+                        <input type="datetime-local" id="end_date" name="end_date" 
+                               value="{{ event.end_date|date:'Y-m-d\TH:i' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="registration_start_date">Registration Start Date & Time</label>
+                        <input type="datetime-local" id="registration_start_date" name="registration_start_date" 
+                               value="{% if event.registration_start_date %}{{ event.registration_start_date|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registration_deadline">Registration Deadline *</label>
+                        <input type="datetime-local" id="registration_deadline" name="registration_deadline" 
+                               value="{% if event.registration_deadline %}{{ event.registration_deadline|date:'Y-m-d\TH:i' }}{% endif %}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="max_capacity">Max Capacity *</label>
+                        <input type="number" id="max_capacity" name="max_capacity" 
+                               value="{{ event.max_participants }}" min="1" required>
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="active" {% if event.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="completed" {% if event.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if event.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" onclick="window.close()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const eventId = {{ event.id }};
+        
+        document.getElementById('edit-event-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                const response = await fetch(`/admin/events/${eventId}/update/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('success', result.message);
+                    
+                    // Update the page title and header
+                    document.title = `Edit Event - ${data.title}`;
+                    document.querySelector('.edit-header h1').textContent = data.title;
+                    
+                    // Update status badge
+                    const statusBadge = document.querySelector('.status-badge');
+                    statusBadge.textContent = data.status;
+                    statusBadge.className = `status-badge status-${data.status}`;
+                    
+                } else {
+                    const error = await response.json();
+                    showAlert('error', error.error || 'Error updating event');
+                }
+            } catch (error) {
+                console.error('Error updating event:', error);
+                showAlert('error', 'Error updating event');
+            }
+        });
+        
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide success messages after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertContainer.innerHTML = '';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

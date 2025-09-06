@@ -1,0 +1,617 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Event Management - Student Portal</title>
+    {% csrf_token %}
+    <link rel="stylesheet" href="{% static 'css/student.css' %}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <h1>Campus Event Management Platform</h1>
+      <div class="user-info">
+        <span id="user-name">Welcome, Student!</span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Hero Section -->
+      <div class="hero">
+        <h2>Discover Amazing Events</h2>
+        <p>Join workshops, hackathons, tech talks, and more exciting events</p>
+      </div>
+
+      <!-- Student Info Section -->
+      <div class="student-info">
+        <h3><i class="fas fa-user"></i> Welcome Back!</h3>
+        <div class="student-details">
+          <span id="student-welcome">Loading...</span>
+          <button onclick="logout()" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Search and Filter Section -->
+      <div class="search-section">
+        <h3><i class="fas fa-search"></i> Find Events</h3>
+        <div class="search-filters">
+          <div class="filter-group">
+            <label for="event-type-filter">Event Type</label>
+            <select id="event-type-filter">
+              <option value="">All Types</option>
+              <option value="hackathon">Hackathon</option>
+              <option value="workshop">Workshop</option>
+              <option value="tech_talk">Tech Talk</option>
+              <option value="fest">Festival</option>
+              <option value="seminar">Seminar</option>
+              <option value="competition">Competition</option>
+              <option value="conference">Conference</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="college-filter">College</label>
+            <select id="college-filter">
+              <option value="">All Colleges</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="status-filter">Status</label>
+            <select id="status-filter">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="search-input">Search Events</label>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search by title or description..."
+            />
+          </div>
+        </div>
+        <button class="search-btn" onclick="searchEvents()">
+          <i class="fas fa-search"></i> Search Events
+        </button>
+      </div>
+
+      <!-- My Events Section -->
+      <div class="my-events">
+        <h3><i class="fas fa-calendar-check"></i> My Registered Events</h3>
+        <div id="my-events-loading" class="loading">Loading your events...</div>
+        <div id="my-events-content" style="display: none">
+          <div class="events-list" id="my-events-list"></div>
+        </div>
+        <div id="my-events-empty" class="empty-state" style="display: none">
+          <i class="fas fa-calendar-times"></i>
+          <h4>No Events Registered</h4>
+          <p>
+            Start exploring events below to register for exciting activities!
+          </p>
+        </div>
+      </div>
+
+      <!-- Available Events Section -->
+      <div class="search-section">
+        <h3><i class="fas fa-calendar-alt"></i> Available Events</h3>
+        <div id="events-loading" class="loading">Loading events...</div>
+        <div class="events-grid" id="events-grid" style="display: none"></div>
+        <div id="events-empty" class="empty-state" style="display: none">
+          <i class="fas fa-calendar-times"></i>
+          <h4>No Events Found</h4>
+          <p>
+            Try adjusting your search filters or check back later for new
+            events.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event Registration Modal -->
+    <div id="registration-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Register for Event</h3>
+          <button class="close-btn" onclick="closeRegistrationModal()">
+            &times;
+          </button>
+        </div>
+        <div id="registration-content"></div>
+      </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Submit Feedback</h3>
+          <button class="close-btn" onclick="closeFeedbackModal()">
+            &times;
+          </button>
+        </div>
+        <form id="feedback-form">
+          <div class="form-group">
+            <label for="feedback-rating">Rating (1-5 stars)</label>
+            <select id="feedback-rating" name="rating" required>
+              <option value="">Select Rating</option>
+              <option value="1">1 Star - Poor</option>
+              <option value="2">2 Stars - Fair</option>
+              <option value="3">3 Stars - Good</option>
+              <option value="4">4 Stars - Very Good</option>
+              <option value="5">5 Stars - Excellent</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="feedback-comments">Comments</label>
+            <textarea
+              id="feedback-comments"
+              name="comments"
+              placeholder="Share your thoughts about the event..."
+            ></textarea>
+          </div>
+          <div style="display: flex; gap: 1rem; justify-content: flex-end">
+            <button
+              type="button"
+              class="btn btn-outline"
+              onclick="closeFeedbackModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Submit Feedback
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // API Base URL
+      const API_BASE = "/api";
+
+      // Global variables
+      let currentStudentId = null;
+      let currentEventId = null;
+      let allEvents = [];
+      let myEvents = [];
+
+      // Check if student is logged in
+      function checkStudentLogin() {
+        const studentId = sessionStorage.getItem("student_id");
+        const studentName = sessionStorage.getItem("student_name");
+        const studentCollege = sessionStorage.getItem("student_college");
+
+        if (!studentId) {
+          // Redirect to login if not logged in
+          window.location.href = "/student/login/";
+          return false;
+        }
+
+        // Set current student ID
+        currentStudentId = sessionStorage.getItem("student_db_id");
+
+        // Update UI
+        document.getElementById(
+          "user-name"
+        ).textContent = `Welcome, ${studentName}!`;
+        document.getElementById(
+          "student-welcome"
+        ).textContent = `${studentName} (${studentId}) - ${studentCollege}`;
+
+        return true;
+      }
+
+      // Logout function
+      function logout() {
+        sessionStorage.clear();
+        window.location.href = "/student/login/";
+      }
+
+      // Initialize the app
+      document.addEventListener("DOMContentLoaded", function () {
+        initializeApp();
+      });
+
+      async function initializeApp() {
+        try {
+          // Check if student is logged in
+          if (!checkStudentLogin()) {
+            return; // Will redirect to login
+          }
+
+          // Load colleges for filter
+          await loadColleges();
+
+          // Load student's events
+          await loadMyEvents();
+
+          // Load all available events
+          await loadEvents();
+        } catch (error) {
+          console.error("Error initializing app:", error);
+        }
+      }
+
+      // Load colleges for filter dropdown
+      async function loadColleges() {
+        try {
+          const response = await fetch(`${API_BASE}/colleges/`);
+          const data = await response.json();
+
+          const collegeFilter = document.getElementById("college-filter");
+          data.results.forEach((college) => {
+            const option = document.createElement("option");
+            option.value = college.id;
+            option.textContent = college.name;
+            collegeFilter.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Error loading colleges:", error);
+        }
+      }
+
+      // Load student's registered events
+      async function loadMyEvents() {
+        try {
+          if (!currentStudentId) {
+            myEvents = [];
+            updateMyEventsDisplay();
+            return;
+          }
+
+          const response = await fetch(
+            `${API_BASE}/students/${currentStudentId}/events/`
+          );
+          const data = await response.json();
+
+          myEvents = data.events || [];
+          displayMyEvents();
+        } catch (error) {
+          console.error("Error loading my events:", error);
+          document.getElementById("my-events-loading").textContent =
+            "Error loading events";
+        }
+      }
+
+      // Display student's events
+      function displayMyEvents() {
+        const loading = document.getElementById("my-events-loading");
+        const content = document.getElementById("my-events-content");
+        const empty = document.getElementById("my-events-empty");
+        const list = document.getElementById("my-events-list");
+
+        loading.style.display = "none";
+
+        if (myEvents.length === 0) {
+          empty.style.display = "block";
+          content.style.display = "none";
+        } else {
+          empty.style.display = "none";
+          content.style.display = "block";
+
+          list.innerHTML = "";
+          myEvents.forEach((event) => {
+            const eventItem = document.createElement("div");
+            eventItem.className = "event-item";
+
+            const startDate = new Date(event.start_date).toLocaleDateString();
+            const status = event.attendance.checked_in
+              ? "Attended"
+              : "Registered";
+
+            eventItem.innerHTML = `
+              <div class="event-info">
+                <h5>${event.title}</h5>
+                <p><i class="fas fa-calendar"></i> ${startDate} | <i class="fas fa-map-marker-alt"></i> ${
+              event.location || "TBA"
+            }</p>
+                <p><span class="status-badge status-${event.event_type}">${
+              event.event_type
+            }</span></p>
+              </div>
+              <div class="event-status">
+                <span>${status}</span>
+                ${
+                  !event.feedback.submitted && event.attendance.checked_in
+                    ? `<button class="btn btn-primary" onclick="showFeedbackModal(${event.event_id})">Give Feedback</button>`
+                    : `<button class="btn btn-outline" onclick="viewEventDetails(${event.event_id})">View Details</button>`
+                }
+              </div>
+            `;
+            list.appendChild(eventItem);
+          });
+        }
+      }
+
+      // Load all available events
+      async function loadEvents() {
+        try {
+          const response = await fetch(
+            `${API_BASE}/events/?status=active&ordering=-start_date`
+          );
+          const data = await response.json();
+
+          allEvents = data.results || [];
+          displayEvents(allEvents);
+        } catch (error) {
+          console.error("Error loading events:", error);
+          document.getElementById("events-loading").textContent =
+            "Error loading events";
+        }
+      }
+
+      // Display events in grid
+      function displayEvents(events) {
+        const loading = document.getElementById("events-loading");
+        const grid = document.getElementById("events-grid");
+        const empty = document.getElementById("events-empty");
+
+        loading.style.display = "none";
+
+        if (events.length === 0) {
+          empty.style.display = "block";
+          grid.style.display = "none";
+        } else {
+          empty.style.display = "none";
+          grid.style.display = "grid";
+
+          grid.innerHTML = "";
+          events.forEach((event) => {
+            const eventCard = document.createElement("div");
+            eventCard.className = "event-card";
+
+            const startDate = new Date(event.start_date).toLocaleDateString();
+            const startTime = new Date(event.start_date).toLocaleTimeString();
+            const isRegistered = myEvents.some(
+              (myEvent) => myEvent.event_id === event.id
+            );
+            const canRegister =
+              event.is_registration_open && !event.is_full && !isRegistered;
+
+            eventCard.innerHTML = `
+              <div class="event-code">${event.event_code}</div>
+              <h4>${event.title}</h4>
+              <div class="event-type">${event.event_type}</div>
+              <div class="event-details">
+                <div class="event-detail">
+                  <i class="fas fa-university"></i>
+                  ${event.college_name}
+                </div>
+                <div class="event-detail">
+                  <i class="fas fa-calendar"></i>
+                  ${startDate}
+                </div>
+                <div class="event-detail">
+                  <i class="fas fa-clock"></i>
+                  ${startTime}
+                </div>
+                <div class="event-detail">
+                  <i class="fas fa-map-marker-alt"></i>
+                  ${event.location || "TBA"}
+                </div>
+                <div class="event-detail">
+                  <i class="fas fa-users"></i>
+                  ${event.current_registrations_count}/${
+              event.max_participants || "∞"
+            } registered
+                </div>
+              </div>
+              <div class="event-description">
+                ${event.description || "No description available."}
+              </div>
+              <div class="event-actions">
+                ${
+                  canRegister
+                    ? `<button class="btn btn-primary" onclick="showRegistrationModal(${event.id})">Register</button>`
+                    : isRegistered
+                    ? `<button class="btn btn-success" disabled>Registered</button>`
+                    : `<button class="btn btn-disabled" disabled>Registration Closed</button>`
+                }
+                <button class="btn btn-outline" onclick="viewEventDetails(${
+                  event.id
+                })">View Details</button>
+              </div>
+            `;
+            grid.appendChild(eventCard);
+          });
+        }
+      }
+
+      // Search events based on filters
+      function searchEvents() {
+        const typeFilter = document.getElementById("event-type-filter").value;
+        const collegeFilter = document.getElementById("college-filter").value;
+        const statusFilter = document.getElementById("status-filter").value;
+        const searchInput = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+
+        let filteredEvents = allEvents;
+
+        if (typeFilter) {
+          filteredEvents = filteredEvents.filter(
+            (event) => event.event_type === typeFilter
+          );
+        }
+
+        if (collegeFilter) {
+          filteredEvents = filteredEvents.filter(
+            (event) => event.college == collegeFilter
+          );
+        }
+
+        if (statusFilter) {
+          filteredEvents = filteredEvents.filter(
+            (event) => event.status === statusFilter
+          );
+        }
+
+        if (searchInput) {
+          filteredEvents = filteredEvents.filter(
+            (event) =>
+              event.title.toLowerCase().includes(searchInput) ||
+              event.description.toLowerCase().includes(searchInput)
+          );
+        }
+
+        displayEvents(filteredEvents);
+      }
+
+      // Show registration modal
+      function showRegistrationModal(eventId) {
+        currentEventId = eventId;
+        const event = allEvents.find((e) => e.id === eventId);
+
+        if (!event) return;
+
+        const content = document.getElementById("registration-content");
+        content.innerHTML = `
+          <div class="alert alert-info">
+            <strong>${event.title}</strong><br>
+            <i class="fas fa-calendar"></i> ${new Date(
+              event.start_date
+            ).toLocaleDateString()}<br>
+            <i class="fas fa-map-marker-alt"></i> ${event.location || "TBA"}
+          </div>
+          <p>Are you sure you want to register for this event?</p>
+          <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+            <button class="btn btn-outline" onclick="closeRegistrationModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="registerForEvent()">Confirm Registration</button>
+          </div>
+        `;
+
+        document.getElementById("registration-modal").style.display = "block";
+      }
+
+      // Close registration modal
+      function closeRegistrationModal() {
+        document.getElementById("registration-modal").style.display = "none";
+      }
+
+      // Register for event
+      async function registerForEvent() {
+        try {
+          // Get CSRF token
+          const csrfToken = document.querySelector(
+            "[name=csrfmiddlewaretoken]"
+          ).value;
+
+          const response = await fetch(
+            `${API_BASE}/events/${currentEventId}/register/`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+              },
+              body: JSON.stringify({
+                student_id: currentStudentId,
+              }),
+            }
+          );
+
+          if (response.ok) {
+            alert("Successfully registered for the event!");
+            closeRegistrationModal();
+            await loadMyEvents(); // Refresh my events
+            await loadEvents(); // Refresh available events
+          } else {
+            const error = await response.json();
+            alert("Error: " + (error.error || "Failed to register"));
+          }
+        } catch (error) {
+          console.error("Error registering for event:", error);
+          alert("Error registering for event");
+        }
+      }
+
+      // Show feedback modal
+      function showFeedbackModal(eventId) {
+        currentEventId = eventId;
+        document.getElementById("feedback-modal").style.display = "block";
+      }
+
+      // Close feedback modal
+      function closeFeedbackModal() {
+        document.getElementById("feedback-modal").style.display = "none";
+        document.getElementById("feedback-form").reset();
+      }
+
+      // Submit feedback
+      document
+        .getElementById("feedback-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const feedbackData = Object.fromEntries(formData);
+
+          try {
+            // Get CSRF token
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+
+            const response = await fetch(
+              `${API_BASE}/events/${currentEventId}/feedback/submit/`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({
+                  student_id: currentStudentId,
+                  ...feedbackData,
+                }),
+              }
+            );
+
+            if (response.ok) {
+              alert("Thank you for your feedback!");
+              closeFeedbackModal();
+              await loadMyEvents(); // Refresh my events
+            } else {
+              const error = await response.json();
+              alert("Error: " + (error.error || "Failed to submit feedback"));
+            }
+          } catch (error) {
+            console.error("Error submitting feedback:", error);
+            alert("Error submitting feedback");
+          }
+        });
+
+      // View event details
+      function viewEventDetails(eventId) {
+        // In a real app, this would open a detailed view
+        alert("Event details view would open here for event ID: " + eventId);
+      }
+
+      // Real-time search as user types
+      document
+        .getElementById("search-input")
+        .addEventListener("input", function () {
+          searchEvents();
+        });
+
+      // Filter change handlers
+      document
+        .getElementById("event-type-filter")
+        .addEventListener("change", searchEvents);
+      document
+        .getElementById("college-filter")
+        .addEventListener("change", searchEvents);
+      document
+        .getElementById("status-filter")
+        .addEventListener("change", searchEvents);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,632 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Event Management - Admin Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}" />
+    {% csrf_token %}
+  </head>
+  <body>
+    <nav class="navbar">
+      <h1>Campus Event Management Platform - Admin Dashboard</h1>
+      <div class="user-info">
+        <span id="admin-welcome">Welcome, Admin</span>
+        <button onclick="logout()" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Dashboard Overview -->
+      <div class="dashboard">
+        <div class="card">
+          <h3>Total Events</h3>
+          <div class="number" id="total-events">-</div>
+          <div class="label">Across all colleges</div>
+        </div>
+        <div class="card">
+          <h3>Active Events</h3>
+          <div class="number" id="active-events">-</div>
+          <div class="label">Currently running</div>
+        </div>
+        <div class="card">
+          <h3>Total Students</h3>
+          <div class="number" id="total-students">-</div>
+          <div class="label">Registered users</div>
+        </div>
+        <div class="card">
+          <h3>Total Registrations</h3>
+          <div class="number" id="total-registrations">-</div>
+          <div class="label">Event registrations</div>
+        </div>
+      </div>
+
+      <!-- Recent Events -->
+      <div class="section">
+        <h2>Recent Events</h2>
+        <div id="recent-events-loading" class="loading">
+          Loading recent events...
+        </div>
+        <table class="table" id="recent-events-table" style="display: none">
+          <thead>
+            <tr>
+              <th>Event Code</th>
+              <th>Title</th>
+              <th>College</th>
+              <th>Type</th>
+              <th>Start Date</th>
+              <th>Status</th>
+              <th>Registrations</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="recent-events-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Recent Registrations -->
+      <div class="section">
+        <h2>Recent Registrations</h2>
+        <div id="recent-registrations-loading" class="loading">
+          Loading recent registrations...
+        </div>
+        <table
+          class="table"
+          id="recent-registrations-table"
+          style="display: none"
+        >
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Student ID</th>
+              <th>Event</th>
+              <th>College</th>
+              <th>Registration Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recent-registrations-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Top Performing Events -->
+      <div class="section">
+        <h2>Top Performing Events</h2>
+        <div id="top-events-loading" class="loading">Loading top events...</div>
+        <table class="table" id="top-events-table" style="display: none">
+          <thead>
+            <tr>
+              <th>Event Code</th>
+              <th>Title</th>
+              <th>College</th>
+              <th>Registrations</th>
+              <th>Attendance</th>
+              <th>Avg Rating</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="top-events-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section">
+        <h2>Quick Actions</h2>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+          "
+        >
+          <a href="#" class="btn btn-primary" onclick="showCreateEventForm()"
+            >Create New Event</a
+          >
+          <a href="#" class="btn btn-success" onclick="showStudentManagement()"
+            >Manage Students</a
+          >
+          <a href="#" class="btn btn-warning" onclick="showReports()"
+            >View Reports</a
+          >
+          <a href="#" class="btn btn-primary" onclick="showCollegeManagement()"
+            >Manage Colleges</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div
+      id="create-event-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      "
+    >
+      <div
+        style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          width: 90%;
+          max-width: 600px;
+        "
+      >
+        <h2>Create New Event</h2>
+        <form id="create-event-form">
+          {% csrf_token %}
+          <div class="form-row">
+            <div class="form-group">
+              <label for="event-title">Event Title</label>
+              <input type="text" id="event-title" name="title" required />
+            </div>
+            <div class="form-group">
+              <label for="event-type">Event Type</label>
+              <select id="event-type" name="event_type" required>
+                <option value="">Select Type</option>
+                <option value="hackathon">Hackathon</option>
+                <option value="workshop">Workshop</option>
+                <option value="tech_talk">Tech Talk</option>
+                <option value="fest">Festival</option>
+                <option value="seminar">Seminar</option>
+                <option value="competition">Competition</option>
+                <option value="conference">Conference</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="event-college">College</label>
+            <select id="event-college" name="college" required>
+              <option value="">Select College</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="event-description">Description</label>
+            <textarea
+              id="event-description"
+              name="description"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="start-date">Event Start Date & Time</label>
+              <input
+                type="datetime-local"
+                id="start-date"
+                name="start_date"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="end-date">Event End Date & Time</label>
+              <input
+                type="datetime-local"
+                id="end-date"
+                name="end_date"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="registration-start-date"
+                >Registration Start Date & Time</label
+              >
+              <input
+                type="datetime-local"
+                id="registration-start-date"
+                name="registration_start_date"
+              />
+            </div>
+            <div class="form-group">
+              <label for="registration-deadline">Registration Deadline</label>
+              <input
+                type="datetime-local"
+                id="registration-deadline"
+                name="registration_deadline"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="location">Location</label>
+              <input type="text" id="location" name="location" />
+            </div>
+            <div class="form-group">
+              <label for="max-participants">Max Participants</label>
+              <input
+                type="number"
+                id="max-participants"
+                name="max_participants"
+                min="1"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="registration-deadline">Registration Deadline</label>
+            <input
+              type="datetime-local"
+              id="registration-deadline"
+              name="registration_deadline"
+            />
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 1rem;
+              justify-content: flex-end;
+              margin-top: 1rem;
+            "
+          >
+            <button
+              type="button"
+              class="btn btn-danger"
+              onclick="hideCreateEventForm()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-success">Create Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // API Base URL
+      const API_BASE = "/api";
+
+      // Load colleges for dropdown
+      async function loadColleges() {
+        try {
+          const response = await fetch("/admin/colleges/");
+          const data = await response.json();
+
+          const collegeSelect = document.getElementById("event-college");
+          collegeSelect.innerHTML = '<option value="">Select College</option>';
+
+          data.colleges.forEach((college) => {
+            const option = document.createElement("option");
+            option.value = college.id;
+            option.textContent = `${college.code} - ${college.name}`;
+            collegeSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Error loading colleges:", error);
+        }
+      }
+
+      // Load dashboard data
+      async function loadDashboardData() {
+        try {
+          // Load dashboard summary
+          const response = await fetch(`${API_BASE}/dashboard/summary/`);
+          const data = await response.json();
+
+          document.getElementById("total-events").textContent =
+            data.overview.total_events;
+          document.getElementById("active-events").textContent =
+            data.overview.active_events;
+          document.getElementById("total-students").textContent =
+            data.overview.total_students;
+          document.getElementById("total-registrations").textContent =
+            data.overview.total_registrations;
+
+          // Load recent events
+          loadRecentEvents();
+
+          // Load recent registrations
+          loadRecentRegistrations(data.recent_registrations);
+
+          // Load top events
+          loadTopEvents();
+        } catch (error) {
+          console.error("Error loading dashboard data:", error);
+        }
+      }
+
+      // Load recent events
+      async function loadRecentEvents() {
+        try {
+          const response = await fetch(
+            `${API_BASE}/events/?ordering=-start_date&limit=10`
+          );
+          const data = await response.json();
+
+          const tbody = document.getElementById("recent-events-body");
+          tbody.innerHTML = "";
+
+          data.results.forEach((event) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                        <td>${event.event_code}</td>
+                        <td>${event.title}</td>
+                        <td>${event.college_name}</td>
+                        <td>${event.event_type}</td>
+                        <td>${new Date(
+                          event.start_date
+                        ).toLocaleDateString()}</td>
+                        <td><span class="status-badge status-${event.status}">${
+              event.status
+            }</span></td>
+                        <td>${event.current_registrations_count}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="viewEvent(${
+                              event.id
+                            })">View</button>
+                            <button class="btn btn-secondary btn-sm" onclick="editEvent(${
+                              event.id
+                            })">Edit</button>
+                            <button class="btn btn-info btn-sm" onclick="markAttendance(${
+                              event.id
+                            })">Attendance</button>
+                            <button class="btn btn-success btn-sm" onclick="endEvent(${
+                              event.id
+                            })" ${
+              event.status === "completed" ? "disabled" : ""
+            }>End</button>
+                            <button class="btn btn-warning btn-sm" onclick="cancelEvent(${
+                              event.id
+                            })" ${
+              event.status === "cancelled" ? "disabled" : ""
+            }>Cancel</button>
+                        </td>
+                    `;
+            tbody.appendChild(row);
+          });
+
+          document.getElementById("recent-events-loading").style.display =
+            "none";
+          document.getElementById("recent-events-table").style.display =
+            "table";
+        } catch (error) {
+          console.error("Error loading recent events:", error);
+          document.getElementById("recent-events-loading").textContent =
+            "Error loading events";
+        }
+      }
+
+      // Load top events
+      async function loadTopEvents() {
+        try {
+          const response = await fetch(
+            `${API_BASE}/events/popularity/?limit=10`
+          );
+          const data = await response.json();
+
+          const tbody = document.getElementById("top-events-body");
+          tbody.innerHTML = "";
+
+          data.data.slice(0, 10).forEach((event) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                        <td>${event.event_code}</td>
+                        <td>${event.title}</td>
+                        <td>${event.college}</td>
+                        <td>${event.total_registrations}</td>
+                        <td>${event.total_attendance}</td>
+                        <td>${event.avg_rating || "N/A"}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="viewEvent(${
+                              event.event_id
+                            })">View</button>
+                        </td>
+                    `;
+            tbody.appendChild(row);
+          });
+
+          document.getElementById("top-events-loading").style.display = "none";
+          document.getElementById("top-events-table").style.display = "table";
+        } catch (error) {
+          console.error("Error loading top events:", error);
+          document.getElementById("top-events-loading").textContent =
+            "Error loading top events";
+        }
+      }
+
+      // Show create event form
+      function showCreateEventForm() {
+        document.getElementById("create-event-modal").style.display = "block";
+      }
+
+      // Hide create event form
+      function hideCreateEventForm() {
+        document.getElementById("create-event-modal").style.display = "none";
+        document.getElementById("create-event-form").reset();
+      }
+
+      // Handle create event form submission
+      document
+        .getElementById("create-event-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const eventData = Object.fromEntries(formData);
+
+          try {
+            // Get CSRF token from the form
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+
+            const response = await fetch("/admin/create-event/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+              },
+              body: JSON.stringify(eventData),
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              alert(
+                "Event created successfully! Event Code: " + result.event_code
+              );
+              hideCreateEventForm();
+              loadDashboardData(); // Refresh data
+            } else {
+              const error = await response.json();
+              alert(
+                "Error creating event: " +
+                  (error.error || error.detail || "Unknown error")
+              );
+            }
+          } catch (error) {
+            console.error("Error creating event:", error);
+            alert("Error creating event");
+          }
+        });
+
+      // View event details
+      function viewEvent(eventId) {
+        window.open(`/admin/events/event/${eventId}/change/`, "_blank");
+      }
+
+      // Mark attendance for an event
+      function markAttendance(eventId) {
+        window.open(`/admin/events/${eventId}/attendance/`, "_blank");
+      }
+
+      // Edit event
+      function editEvent(eventId) {
+        window.open(`/admin/events/${eventId}/edit/`, "_blank");
+      }
+
+      // End event (mark as completed)
+      async function endEvent(eventId) {
+        if (confirm("Are you sure you want to end this event?")) {
+          try {
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+            const response = await fetch(`/admin/events/${eventId}/end/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+              },
+            });
+
+            if (response.ok) {
+              alert("Event ended successfully!");
+              loadDashboardData(); // Refresh the dashboard
+            } else {
+              const error = await response.json();
+              alert("Error ending event: " + (error.error || "Unknown error"));
+            }
+          } catch (error) {
+            console.error("Error ending event:", error);
+            alert("Error ending event");
+          }
+        }
+      }
+
+      // Cancel event
+      async function cancelEvent(eventId) {
+        if (confirm("Are you sure you want to cancel this event?")) {
+          try {
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+            const response = await fetch(`/admin/events/${eventId}/cancel/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+              },
+            });
+
+            if (response.ok) {
+              alert("Event cancelled successfully!");
+              loadDashboardData(); // Refresh the dashboard
+            } else {
+              const error = await response.json();
+              alert(
+                "Error cancelling event: " + (error.error || "Unknown error")
+              );
+            }
+          } catch (error) {
+            console.error("Error cancelling event:", error);
+            alert("Error cancelling event");
+          }
+        }
+      }
+
+      // Show student management
+      function showStudentManagement() {
+        window.location.href = "/admin/events/student/";
+      }
+
+      // Show reports
+      function showReports() {
+        window.location.href = "/api/reports/dashboard-summary/";
+      }
+
+      // Show college management
+      function showCollegeManagement() {
+        window.location.href = "/admin/events/college/";
+      }
+
+      // Load recent registrations
+      function loadRecentRegistrations(registrations) {
+        const tbody = document.getElementById("recent-registrations-body");
+        const loading = document.getElementById("recent-registrations-loading");
+        const table = document.getElementById("recent-registrations-table");
+
+        if (registrations && registrations.length > 0) {
+          tbody.innerHTML = registrations
+            .map(
+              (reg) => `
+                <tr>
+                  <td>${reg.student_name}</td>
+                  <td>${reg.student_id}</td>
+                  <td>${reg.event_title} (${reg.event_code})</td>
+                  <td>${reg.college_name}</td>
+                  <td>${reg.registration_date}</td>
+                  <td><span class="status status-${reg.status}">${reg.status}</span></td>
+                </tr>
+              `
+            )
+            .join("");
+          loading.style.display = "none";
+          table.style.display = "table";
+        } else {
+          tbody.innerHTML =
+            "<tr><td colspan='6' class='text-center'>No recent registrations</td></tr>";
+          loading.style.display = "none";
+          table.style.display = "table";
+        }
+      }
+
+      // Logout function
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          // Redirect to Django admin logout
+          window.location.href = "/admin/logout/";
+        }
+      }
+
+      // Initialize dashboard
+      document.addEventListener("DOMContentLoaded", function () {
+        loadDashboardData();
+        loadColleges();
+      });
+    </script>
+  </body>
+</html>

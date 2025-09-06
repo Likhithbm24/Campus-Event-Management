@@ -1,0 +1,371 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mark Attendance - {{ event.title }}</title>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}" />
+    {% csrf_token %}
+    <style>
+      .attendance-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .event-header {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
+
+      .event-header h1 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .event-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .event-detail {
+        background: #f8f9fa;
+        padding: 0.75rem;
+        border-radius: 4px;
+      }
+
+      .event-detail strong {
+        color: #495057;
+      }
+
+      .attendance-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .attendance-table table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .attendance-table th {
+        background: #2c3e50;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+      }
+
+      .attendance-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .attendance-table tr:hover {
+        background: #f8f9fa;
+      }
+
+      .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+
+      .status-present {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status-absent {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-late {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+
+      .status-pending {
+        background-color: #e2e3e5;
+        color: #383d41;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .btn-present {
+        background-color: #28a745;
+        color: white;
+      }
+
+      .btn-present:hover {
+        background-color: #218838;
+      }
+
+      .btn-absent {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      .btn-absent:hover {
+        background-color: #c82333;
+      }
+
+      .btn-late {
+        background-color: #ffc107;
+        color: #212529;
+      }
+
+      .btn-late:hover {
+        background-color: #e0a800;
+      }
+
+      .notes-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+
+      .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2c3e50;
+      }
+
+      .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <h1>Mark Attendance - {{ event.title }}</h1>
+      <div class="user-info">
+        <span>Welcome, Admin</span>
+        <button onclick="window.close()" class="logout-btn">Close</button>
+      </div>
+    </nav>
+
+    <div class="attendance-container">
+      <!-- Event Information -->
+      <div class="event-header">
+        <h1>{{ event.title }}</h1>
+        <div class="event-details">
+          <div class="event-detail">
+            <strong>Event Code:</strong> {{ event.event_code }}
+          </div>
+          <div class="event-detail">
+            <strong>College:</strong> {{ event.college.name }}
+          </div>
+          <div class="event-detail">
+            <strong>Date:</strong> {{ event.start_date|date:"M d, Y" }}
+          </div>
+          <div class="event-detail">
+            <strong>Time:</strong> {{ event.start_date|time:"H:i" }} - {{
+            event.end_date|time:"H:i" }}
+          </div>
+          <div class="event-detail">
+            <strong>Location:</strong> {{ event.location }}
+          </div>
+          <div class="event-detail">
+            <strong>Status:</strong>
+            <span class="status-badge status-{{ event.status }}"
+              >{{ event.status }}</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Statistics -->
+      <div class="summary-stats">
+        <div class="stat-card">
+          <div class="stat-number" id="total-registered">
+            {{ students|length }}
+          </div>
+          <div class="stat-label">Total Registered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="present-count">0</div>
+          <div class="stat-label">Present</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="absent-count">0</div>
+          <div class="stat-label">Absent</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="late-count">0</div>
+          <div class="stat-label">Late</div>
+        </div>
+      </div>
+
+      <!-- Attendance Table -->
+      <div class="attendance-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>College</th>
+              <th>Status</th>
+              <th>Actions</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td>{{ student.student_id }}</td>
+              <td>{{ student.full_name }}</td>
+              <td>{{ student.college.name }}</td>
+              <td>
+                <span
+                  class="status-badge status-pending"
+                  id="status-{{ student.id }}"
+                  >Pending</span
+                >
+              </td>
+              <td>
+                <div class="btn-group">
+                  <button
+                    class="btn-sm btn-present"
+                    onclick="markAttendance({{ student.id }}, 'present')"
+                  >
+                    Present
+                  </button>
+                  <button
+                    class="btn-sm btn-absent"
+                    onclick="markAttendance({{ student.id }}, 'absent')"
+                  >
+                    Absent
+                  </button>
+                  <button
+                    class="btn-sm btn-late"
+                    onclick="markAttendance({{ student.id }}, 'late')"
+                  >
+                    Late
+                  </button>
+                </div>
+              </td>
+              <td>
+                <input
+                  type="text"
+                  class="notes-input"
+                  id="notes-{{ student.id }}"
+                  placeholder="Add notes..."
+                />
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const eventId = {{ event.id }};
+
+      async function markAttendance(studentId, status) {
+          try {
+              const notes = document.getElementById(`notes-${studentId}`).value;
+              const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+              const response = await fetch(`/admin/events/${eventId}/attendance/mark/`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': csrfToken
+                  },
+                  body: JSON.stringify({
+                      student_id: studentId,
+                      status: status,
+                      notes: notes
+                  })
+              });
+
+              if (response.ok) {
+                  const result = await response.json();
+
+                  // Update status badge
+                  const statusElement = document.getElementById(`status-${studentId}`);
+                  statusElement.textContent = status;
+                  statusElement.className = `status-badge status-${status}`;
+
+                  // Update summary counts
+                  updateSummaryCounts();
+
+                  // Show success message
+                  alert(`Attendance marked: ${result.student_name} - ${status}`);
+              } else {
+                  const error = await response.json();
+                  alert('Error marking attendance: ' + (error.error || 'Unknown error'));
+              }
+          } catch (error) {
+              console.error('Error marking attendance:', error);
+              alert('Error marking attendance');
+          }
+      }
+
+      function updateSummaryCounts() {
+          const statusElements = document.querySelectorAll('[id^="status-"]');
+          let presentCount = 0;
+          let absentCount = 0;
+          let lateCount = 0;
+
+          statusElements.forEach(element => {
+              const status = element.textContent.toLowerCase();
+              if (status === 'present') presentCount++;
+              else if (status === 'absent') absentCount++;
+              else if (status === 'late') lateCount++;
+          });
+
+          document.getElementById('present-count').textContent = presentCount;
+          document.getElementById('absent-count').textContent = absentCount;
+          document.getElementById('late-count').textContent = lateCount;
+      }
+
+      // Initialize summary counts on page load
+      document.addEventListener('DOMContentLoaded', function() {
+          updateSummaryCounts();
+      });
+    </script>
+  </body>
+</html>
